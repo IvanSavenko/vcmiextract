@@ -1,0 +1,4 @@
+bin/
+tmp/
+.vs/
+src/vcmiextract.vcxproj.user
