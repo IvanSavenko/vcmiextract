@@ -1,7 +1,12 @@
 #include "file_format_png.h"
 
 #include <vector>
+
+#if __has_include(<libpng16/png.h>)
+#include <libpng16/png.h>
+#else
 #include <libpng/png.h>
+#endif
 
 #pragma comment(lib, "libpng16.lib")
 
@@ -57,6 +62,9 @@ static uint8_t get_png_color_type_from_format(basic_image::image_format format )
 
 		case basic_image::image_format::rgba32:
 			return PNG_COLOR_TYPE_RGB_ALPHA;
+
+		default:
+			break;
 	}
 	return 0;
 }
