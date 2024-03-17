@@ -62,6 +62,9 @@ static uint8_t get_png_color_type_from_format(basic_image::image_format format )
 
 		case basic_image::image_format::rgba32:
 			return PNG_COLOR_TYPE_RGB_ALPHA;
+
+		default:
+			break;
 	}
 	return 0;
 }
