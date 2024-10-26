@@ -70,7 +70,7 @@ void vcmiextract::extract_file(const std::filesystem::path& source, const std::f
 
 	memory_file file(source);
 
-	if (string_iequals(extension, ".lod"))
+	if (string_iequals(extension, ".lod") || string_iequals(extension, ".pac")) // .pac and .lod archives are identical
 	{
 		vcmiextract::extract_lod(file, destination);
 		return;
