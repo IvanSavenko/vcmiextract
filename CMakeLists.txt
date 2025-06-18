@@ -18,11 +18,14 @@ endif()
 set(extract_SRCS
 	src/file_format_png.cpp
 	src/file_format_png.h
+	src/file_format_dds.cpp
+	src/file_format_dds.h
 	src/memory_file.h
 	src/vcmiextract.cpp
 	src/vcmiextract.h
 	src/vcmiextract_archive.cpp
 	src/vcmiextract_image.cpp
+	src/vcmiextract_hd.cpp
 	src/vcmiextract_zlib.cpp
 )
 

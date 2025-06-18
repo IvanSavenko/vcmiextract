@@ -58,11 +58,11 @@ void vcmiextract::extract_file(const std::filesystem::path & source, const std::
 
 	memory_file file(source);
 
-	//	if (string_iequals(extension, ".pak"))
-	//	{
-	//		vcmiextract::extract_pak(file, destination);
-	//		return;
-	//	}
+	if (string_iequals(extension, ".pak"))
+	{
+		vcmiextract::extract_pak(file, destination);
+		return;
+	}
 
 	if(string_iequals(extension, ".lod"))
 	{
