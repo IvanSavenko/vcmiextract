@@ -122,11 +122,6 @@ static void process(std::string filename)
 
 int main(int argc, char** argv)
 {
-	//process("S:/Games/Heroes III HotA/Data/HotA/artifbon.def");
-	//process("S:/src/vcmiextract/test/HotA.lod");
-	//process("S:/src/vcmiextract/test/HotA_lng.lod");
-	//process("S:/src/vcmiextract/test/HotA.snd");
-
 	for (int i = 1; i < argc; ++i)
 		process(argv[i]);
 

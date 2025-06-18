@@ -2,6 +2,7 @@
 
 #include <array>
 #include <map>
+#include <vector>
 
 basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
 {

@@ -1,5 +1,1 @@
-bin/
-tmp/
-.vs/
-src/vcmiextract.vcxproj.user
-build
+CMakeLists.txt.user

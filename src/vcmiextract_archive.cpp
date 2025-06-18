@@ -1,6 +1,7 @@
 #include "vcmiextract.h"
 
 #include <array>
+#include <vector>
 
 void vcmiextract::extract_lod(memory_file& file, const std::filesystem::path& destination)
 {

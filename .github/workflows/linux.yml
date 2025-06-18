@@ -1,0 +1,34 @@
+name: Compile on Linux
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - { cxx: g++-10, cc: gcc-10, apt: g++-10 }
+          - { cxx: g++-14, cc: gcc-14, apt: g++-14 }
+          - { cxx: clang++-14, cc: clang-14, apt: clang-14 }
+          - { cxx: clang++-19, cc: clang-19, apt: clang-19 }
+        type:
+          - Release
+          - Debug
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: APT
+        run: sudo apt install libpng-dev zlib1g-dev '${{matrix.compiler.apt}}'
+      - name: Configure
+        run: cmake -S . -B ./build -DCMAKE_BUILD_TYPE='${{matrix.type}}' -DCMAKE_CC_COMPILER='${{matrix.compiler.cc}}' -DCMAKE_CXX_COMPILER='${{matrix.compiler.cxx}}'
+      - name: Build
+        run: cmake --build ./build

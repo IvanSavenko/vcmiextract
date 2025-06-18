@@ -1,11 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <cassert>
-#include <cstdint>
-#include <string>
-#include <filesystem>
 #include <algorithm>
+#include <cassert>
+#include <cstdio>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <string>
 
 class memory_file
 {
@@ -139,11 +140,11 @@ inline memory_file::memory_file(size_t memory_size)
 
 inline memory_file::memory_file(std::string const &filename)
 {
-	FILE *file_ptr;
 #ifdef _MSC_VER
+	FILE *file_ptr;
 	fopen_s(&file_ptr, filename.c_str(), "rb");
 #else
-	file_ptr = fopen(filename.c_str(), "rb");
+	FILE *file_ptr = fopen(filename.c_str(), "rb");
 #endif
 	assert(file_ptr != nullptr);
 	fseek(file_ptr, 0, SEEK_END);
@@ -165,11 +166,11 @@ inline memory_file::memory_file(std::string const &filename)
 
 inline memory_file::memory_file(std::filesystem::path const &filename)
 {
-	FILE *file_ptr;
 #ifdef _MSC_VER
+	FILE *file_ptr;
 	_wfopen_s(&file_ptr, filename.native().c_str(), L"rb");
 #else
-	file_ptr = fopen(filename.c_str(), "rb");
+	FILE *file_ptr = fopen(filename.c_str(), "rb");
 #endif
 	assert(file_ptr != nullptr);
 	fseek(file_ptr, 0, SEEK_END);
