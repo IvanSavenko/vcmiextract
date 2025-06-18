@@ -17,6 +17,7 @@ jobs:
         type:
           - Release
           - Debug
+
     runs-on: ubuntu-latest
 
     defaults:

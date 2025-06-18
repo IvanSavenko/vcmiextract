@@ -26,12 +26,12 @@ static uint8_t get_bytes_per_pixel_by_format(basic_image::image_format format)
 }
 
 basic_image::basic_image(uint32_t height, uint32_t width, uint32_t scanline, image_format format):
-	width(width),
-	height(height),
+	pixels(new uint8_t[size_t(scanline)*height]),
 	scanline(scanline),
+	height(height),
+	width(width),
 	format(format),
-	bytes_per_pixel(get_bytes_per_pixel_by_format(format)),
-	pixels(new uint8_t[size_t(scanline)*height])
+	bytes_per_pixel(get_bytes_per_pixel_by_format(format))
 {
 	assert(width > 0);
 	assert(height > 0);

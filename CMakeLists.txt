@@ -9,6 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 
+if (MSVC)
+	add_compile_options(/W4)
+else()
+	add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-error=unused-variable)
+endif()
+
 set(extract_SRCS
 	src/file_format_png.cpp
 	src/file_format_png.h
@@ -23,7 +29,6 @@ set(extract_SRCS
 add_executable(vcmiextract ${extract_SRCS})
 
 set_property(TARGET vcmiextract PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
 
 target_link_libraries(vcmiextract 
 	PRIVATE

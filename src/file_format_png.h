@@ -119,4 +119,4 @@ namespace file_format_png
 	basic_image_ptr optimize_try_drop_alpha(basic_image_ptr const& image);
 	void optimize_and_save(basic_image_ptr const& image, std::filesystem::path const& filename);
 	void save_image( basic_image_ptr const& image, std::filesystem::path const & filename );
-};
+}
