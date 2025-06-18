@@ -2,8 +2,6 @@
 
 #include <zlib.h>
 
-#pragma comment(lib, "zlibwapi.lib")
-
 void vcmiextract::decompress_file(memory_file& source, memory_file& target)
 {
 	z_stream_s* inflate_state;

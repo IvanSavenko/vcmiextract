@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 project (vcmiextract)
 
@@ -22,9 +22,17 @@ set(extract_SRCS
 
 add_executable(vcmiextract ${extract_SRCS})
 
+set_property(TARGET vcmiextract PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+
 target_link_libraries(vcmiextract 
 	PRIVATE
 		ZLIB::ZLIB
 		PNG::PNG
 )
 
+install(TARGETS vcmiextract RUNTIME DESTINATION .)
+
+set(CPACK_PACKAGE_NAME "vcmiextract")
+set(CPACK_PACKAGE_VERSION "1.0")
+include(CPack)

@@ -1,14 +1,11 @@
 #include "file_format_png.h"
 
 #include <vector>
-
 #if __has_include(<libpng16/png.h>)
 #include <libpng16/png.h>
 #else
 #include <libpng/png.h>
 #endif
-
-#pragma comment(lib, "libpng16.lib")
 
 static uint8_t get_bytes_per_pixel_by_format(basic_image::image_format format)
 {

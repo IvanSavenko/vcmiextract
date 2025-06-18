@@ -1,0 +1,39 @@
+name: Build Windows package
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - platform: msvc-x64
+            os: windows-latest
+            triplet: x64-windows-static
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: VCPKG
+      if: ${{ startsWith(matrix.platform, 'msvc') }}
+      run: vcpkg.exe install zlib libpng --triplet '${{matrix.triplet}}'
+
+    - name: Configure
+      run: cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release --toolchain="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='${{matrix.triplet}}'
+
+    - name: Build
+      run: cmake --build ./build --config Release
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: vcmiextract-windows-x64.zip
+        compression-level: 9
+        path: ./build/Release/vcmiextract.exe
