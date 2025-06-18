@@ -1,4 +1,4 @@
-﻿#include <string>
+#include <string>
 
 #include "memory_file.h"
 #include "file_format_png.h"
