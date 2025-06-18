@@ -64,7 +64,7 @@ void vcmiextract::extract_file(const std::filesystem::path & source, const std::
 		return;
 	}
 
-	if(string_iequals(extension, ".lod"))
+	if(string_iequals(extension, ".lod") || string_iequals(extension, ".pac"))
 	{
 		vcmiextract::extract_lod(file, destination);
 		return;
