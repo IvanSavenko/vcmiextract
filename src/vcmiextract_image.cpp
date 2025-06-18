@@ -242,11 +242,15 @@ static void extract_def_h3(memory_file & file, const std::filesystem::path & des
 	}
 
 	std::string file_listing;
+	file_listing += "{\n";
+	file_listing += "\t\"images\" : [\n";
 
 	for(const auto & group : groups)
 	{
-		for(const auto & entry : group.second.entries)
+		for (size_t i = 0; i < group.second.entries.size(); ++i)
 		{
+			const auto & entry = group.second.entries[i];
+
 			image_entry_def header;
 
 			file.set(entry.offset);
@@ -274,18 +278,32 @@ static void extract_def_h3(memory_file & file, const std::filesystem::path & des
 
 			basic_image_ptr image = load_image_def(file, header, palette);
 
-			file_listing += '"';
+			file_listing += "\t\t{ ";
+			if (groups.size() > 1)
+			{
+				file_listing += "\"group\" : ";
+				file_listing += std::to_string(group.second.index);
+				file_listing += ", ";
+			}
+
+			file_listing += "\"frame\" : ";
+			file_listing += std::to_string(i);
+
+			file_listing += ", \"file\" : \"";
 			file_listing += std::filesystem::path(entry.name.data()).replace_extension(".png").string();
-			file_listing += '"';
-			file_listing += ',';
-			file_listing += '\n';
+			file_listing += "\" },\n";
 
 			vcmiextract::save_image(image, destination, entry.name.data());
 		}
 	}
+
+	file_listing.pop_back();
+	file_listing.pop_back();
+	file_listing += "\n\t]\n}\n";
+
 	memory_file listing_file(reinterpret_cast<uint8_t *>(file_listing.data()), file_listing.size());
 
-	vcmiextract::save_file(listing_file, destination, "tiles.txt");
+	vcmiextract::save_file(listing_file, destination, "animation.json");
 }
 
 static void extract_def_d32f(memory_file & file, const std::filesystem::path & destination)
@@ -329,9 +347,12 @@ static void extract_def_d32f(memory_file & file, const std::filesystem::path & d
 	assert(magic == 0x46323344);
 
 	std::string file_listing;
+	file_listing += "{\n";
+	file_listing += "\t\"images\" : [\n";
 
-	for(const auto & entry : group)
+	for (size_t i = 0; i < group.size(); ++i)
 	{
+		const auto & entry = group[i];
 		file.set(entry.offset);
 
 		uint32_t bits_per_pixel = file.read<uint32_t>();
@@ -359,18 +380,24 @@ static void extract_def_d32f(memory_file & file, const std::filesystem::path & d
 			file.read(image->rgba(margin_left, margin_top + stored_height - y - 1).ptr, stored_width * 4);
 		}
 
-		file_listing += '"';
+		file_listing += "\t\t{ ";
+		file_listing += "\"frame\" : ";
+		file_listing += std::to_string(i);
+
+		file_listing += ", \"file\" : \"";
 		file_listing += std::filesystem::path(entry.name.data()).replace_extension(".png").string();
-		file_listing += '"';
-		file_listing += ',';
-		file_listing += '\n';
+		file_listing += "\" },\n";
 
 		vcmiextract::save_image(image, destination, entry.name.data());
 	}
 
+	file_listing.pop_back();
+	file_listing.pop_back();
+	file_listing += "\n\t]\n}\n";
+
 	memory_file listing_file(reinterpret_cast<uint8_t *>(file_listing.data()), file_listing.size());
 
-	vcmiextract::save_file(listing_file, destination, "tiles.txt");
+	vcmiextract::save_file(listing_file, destination, "animation.json");
 }
 
 void vcmiextract::extract_def(memory_file & file, const std::filesystem::path & destination)
