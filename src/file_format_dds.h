@@ -6,5 +6,4 @@
 namespace file_format_dds
 {
     basic_image_ptr load(memory_file & data);
-};
-
+}

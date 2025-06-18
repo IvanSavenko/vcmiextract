@@ -313,83 +313,112 @@ static void extract_def_d32f(memory_file & file, const std::filesystem::path & d
 	uint32_t unknown2 = file.read<uint32_t>();
 	[[maybe_unused]] uint32_t width = file.read<uint32_t>();
 	[[maybe_unused]] uint32_t height = file.read<uint32_t>();
-	uint32_t unknown5 = file.read<uint32_t>();
+	uint32_t total_groups = file.read<uint32_t>();
 	uint32_t unknown6 = file.read<uint32_t>();
 	uint32_t unknown7 = file.read<uint32_t>();
-	uint32_t header_size = file.read<uint32_t>();
-	[[maybe_unused]] uint32_t unknown9 = file.read<uint32_t>();
-	uint32_t entries_count = file.read<uint32_t>();
-	[[maybe_unused]] uint32_t unknownB = file.read<uint32_t>();
 
+	assert(magic == 0x46323344);
 	assert(unknown1 == 1);
 	assert(unknown2 == 24);
-	assert(unknown5 == 1);
 	assert(unknown6 == 8);
-	assert(unknown7 == 1);
-	assert(header_size == 17 * entries_count + 16);
+	assert(unknown7 == 1 || unknown7 == 22); // groups?
+
+	struct archive_entry
+	{
+		std::array<char, 13> name{};
+		uint32_t offset = 0;
+	};
 
 	struct archive_block_entry
 	{
-		std::array<char, 13> name;
-		uint32_t offset;
+		std::vector<archive_entry> entries;
+
+		uint32_t header_size = 0;
+		uint32_t index = 0;
+		uint32_t size = 0;
+		uint32_t unknown2 = 0;
 	};
 
-	std::vector<archive_block_entry> group;
+	std::map<uint32_t, archive_block_entry> groups;
 
-	group.resize(entries_count);
+	for(uint32_t i = 0; i < total_groups; ++i)
+	{
+		archive_block_entry group;
 
-	for(uint32_t j = 0; j < entries_count; ++j)
-		file.read(group[j].name.data(), group[j].name.size());
+		file.read(group.header_size);
+		file.read(group.index);
+		file.read(group.size);
+		file.read(group.unknown2);
+		assert(group.header_size == 17 * group.size + 16);
 
-	for(uint32_t j = 0; j < entries_count; ++j)
-		file.read(group[j].offset);
+		group.entries.resize(group.size);
 
-	assert(magic == 0x46323344);
+		for(uint32_t j = 0; j < group.size; ++j)
+			file.read(group.entries[j].name.data(), group.entries[j].name.size());
+
+		for(uint32_t j = 0; j < group.size; ++j)
+			file.read(group.entries[j].offset);
+
+		assert(groups.count(group.index) == 0);
+		groups[group.index] = group;
+	}
 
 	std::string file_listing;
 	file_listing += "{\n";
 	file_listing += "\t\"images\" : [\n";
 
-	for (size_t i = 0; i < group.size(); ++i)
+	for(const auto & group : groups)
 	{
-		const auto & entry = group[i];
-		file.set(entry.offset);
-
-		uint32_t bits_per_pixel = file.read<uint32_t>();
-		uint32_t image_size = file.read<uint32_t>();
-		uint32_t full_width = file.read<uint32_t>();
-		uint32_t full_height = file.read<uint32_t>();
-		uint32_t stored_width = file.read<uint32_t>();
-		uint32_t stored_height = file.read<uint32_t>();
-		uint32_t margin_left = file.read<uint32_t>();
-		uint32_t margin_top = file.read<uint32_t>();
-		uint32_t entry_unknown1 = file.read<uint32_t>();
-		uint32_t entry_unknown2 = file.read<uint32_t>();
-
-		assert(stored_width <= full_width);
-		assert(stored_height <= full_height);
-		assert(entry_unknown1 == 8);
-		assert(entry_unknown2 == 0 || entry_unknown2 == 1);
-		assert(bits_per_pixel == 32);
-		assert(image_size == stored_width * stored_height * 4);
-
-		auto image = std::make_shared<basic_image>(full_height, full_width, full_width * 4, basic_image::image_format::rgba32);
-
-		for(uint32_t y = 0; y < stored_height; ++y)
+		for (size_t i = 0; i < group.second.entries.size(); ++i)
 		{
-			file.read(image->rgba(margin_left, margin_top + stored_height - y - 1).ptr, stored_width * 4);
+			const auto & entry = group.second.entries[i];
+			file.set(entry.offset);
+
+			uint32_t bits_per_pixel = file.read<uint32_t>();
+			uint32_t image_size = file.read<uint32_t>();
+			uint32_t full_width = file.read<uint32_t>();
+			uint32_t full_height = file.read<uint32_t>();
+			uint32_t stored_width = file.read<uint32_t>();
+			uint32_t stored_height = file.read<uint32_t>();
+			uint32_t margin_left = file.read<uint32_t>();
+			uint32_t margin_top = file.read<uint32_t>();
+			uint32_t entry_unknown1 = file.read<uint32_t>();
+			uint32_t entry_unknown2 = file.read<uint32_t>();
+
+			assert(stored_width <= full_width);
+			assert(stored_height <= full_height);
+			assert(entry_unknown1 == 8);
+			assert(entry_unknown2 == 0 || entry_unknown2 == 1);
+			assert(bits_per_pixel == 32);
+			assert(image_size == stored_width * stored_height * 4);
+
+			auto image = std::make_shared<basic_image>(full_height, full_width, full_width * 4, basic_image::image_format::rgba32);
+
+			for(uint32_t y = 0; y < stored_height; ++y)
+			{
+				file.read(image->rgba(margin_left, margin_top + stored_height - y - 1).ptr, stored_width * 4);
+			}
+
+			file_listing += "\t\t{ ";
+			if (groups.size() > 1)
+			{
+				file_listing += "\"group\" : ";
+				file_listing += std::to_string(group.second.index);
+				file_listing += ", ";
+			}
+
+			file_listing += "\"frame\" : ";
+			file_listing += std::to_string(i);
+
+			file_listing += ", \"file\" : \"";
+			file_listing += std::filesystem::path(entry.name.data()).replace_extension(".png").string();
+			file_listing += "\" },\n";
+
+			vcmiextract::save_image(image, destination, entry.name.data());
 		}
-
-		file_listing += "\t\t{ ";
-		file_listing += "\"frame\" : ";
-		file_listing += std::to_string(i);
-
-		file_listing += ", \"file\" : \"";
-		file_listing += std::filesystem::path(entry.name.data()).replace_extension(".png").string();
-		file_listing += "\" },\n";
-
-		vcmiextract::save_image(image, destination, entry.name.data());
 	}
+
+	assert(file.eof());
 
 	file_listing.pop_back();
 	file_listing.pop_back();
