@@ -1,6 +1,4 @@
-﻿#include <array>
-#include <string>
-#include <map>
+﻿#include <string>
 
 #include "memory_file.h"
 #include "file_format_png.h"
@@ -14,7 +12,7 @@ static bool string_iequals(const std::string& a, const std::string& b)
 		});
 }
 
-void vcmiextract::save_image(basic_image_ptr data, const std::filesystem::path& destination, std::string filename)
+void vcmiextract::save_image(const basic_image_ptr & data, const std::filesystem::path & destination, const std::string & filename)
 {
 	std::filesystem::create_directories(destination);
 
@@ -23,7 +21,7 @@ void vcmiextract::save_image(basic_image_ptr data, const std::filesystem::path& 
 	file_format_png::optimize_and_save(data, output_name.replace_extension(".png"));
 }
 
-void vcmiextract::save_file(memory_file& data, const std::filesystem::path& destination, std::string filename)
+void vcmiextract::save_file(memory_file & data, const std::filesystem::path & destination, const std::string & filename)
 {
 	std::filesystem::create_directories(destination);
 
@@ -32,30 +30,20 @@ void vcmiextract::save_file(memory_file& data, const std::filesystem::path& dest
 
 	auto full_path = destination / filename;
 
-	//	if (string_iequals(extension, ".def") || string_iequals(extension, ".d32"))
-	//	{
-	//		std::filesystem::path target = full_path;
-	//		
-	//		target.replace_extension();
-	//
-	//		file_format_def::extract(data, target);
-	//		//return; // keep .def
-	//	}
-
-	if (string_iequals(extension, ".pcx") || string_iequals(extension, ".p32"))
+	if(string_iequals(extension, ".pcx") || string_iequals(extension, ".p32"))
 	{
 		basic_image_ptr image = vcmiextract::load_image_pcx(data);
 
 		filename_path.replace_extension(".png");
 
-		if (image)
+		if(image)
 		{
 			save_image(image, destination, filename_path.string());
 			return;
 		}
 	}
 
-	FILE* fp = fopen(full_path.string().c_str(), "wb");
+	FILE * fp = fopen(full_path.string().c_str(), "wb");
 	assert(fp);
 
 	data.set(0);
@@ -64,31 +52,37 @@ void vcmiextract::save_file(memory_file& data, const std::filesystem::path& dest
 	fclose(fp);
 }
 
-void vcmiextract::extract_file(const std::filesystem::path& source, const std::filesystem::path& destination)
+void vcmiextract::extract_file(const std::filesystem::path & source, const std::filesystem::path & destination)
 {
 	std::string extension = source.extension().string();
 
 	memory_file file(source);
 
-	if (string_iequals(extension, ".lod"))
+	//	if (string_iequals(extension, ".pak"))
+	//	{
+	//		vcmiextract::extract_pak(file, destination);
+	//		return;
+	//	}
+
+	if(string_iequals(extension, ".lod"))
 	{
 		vcmiextract::extract_lod(file, destination);
 		return;
 	}
 
-	if (string_iequals(extension, ".snd"))
+	if(string_iequals(extension, ".snd"))
 	{
 		vcmiextract::extract_snd(file, destination);
 		return;
 	}
 
-	if (string_iequals(extension, ".vid"))
+	if(string_iequals(extension, ".vid"))
 	{
 		vcmiextract::extract_vid(file, destination);
 		return;
 	}
 
-	if (string_iequals(extension, ".def") || string_iequals(extension, ".d32"))
+	if(string_iequals(extension, ".def") || string_iequals(extension, ".d32"))
 	{
 		vcmiextract::extract_def(file, destination);
 		return;
@@ -105,13 +99,13 @@ static void process(std::string filename)
 	target_dir.remove_filename();
 	target_dir = target_dir / source_file.stem();
 
-	if (!std::filesystem::is_regular_file(source_file))
+	if(!std::filesystem::is_regular_file(source_file))
 	{
 		printf("file '%s' not found!\n", filename.c_str());
 		return;
 	}
 
-	if (std::filesystem::is_regular_file(target_dir))
+	if(std::filesystem::is_regular_file(target_dir))
 	{
 		printf("output path for '%s' is not a directory!\n", filename.c_str());
 		return;
@@ -120,9 +114,9 @@ static void process(std::string filename)
 	vcmiextract::extract_file(source_file, target_dir);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
-	for (int i = 1; i < argc; ++i)
+	for(int i = 1; i < argc; ++i)
 		process(argv[i]);
 
 	return 0;

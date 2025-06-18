@@ -2,9 +2,9 @@
 
 #include <zlib.h>
 
-void vcmiextract::decompress_file(memory_file& source, memory_file& target)
+void vcmiextract::decompress_file(memory_file & source, memory_file & target)
 {
-	z_stream_s* inflate_state;
+	z_stream_s * inflate_state;
 
 	inflate_state = new z_stream();
 	inflate_state->zalloc = Z_NULL;

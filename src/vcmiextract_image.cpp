@@ -4,9 +4,9 @@
 #include <map>
 #include <vector>
 
-basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
+basic_image_ptr vcmiextract::load_image_pcx(memory_file & input)
 {
-	if (input.peek<uint32_t>() == 0x46323350) //P32F
+	if(input.peek<uint32_t>() == 0x46323350) //P32F
 	{
 		input.set(0);
 
@@ -32,7 +32,7 @@ basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
 
 		auto img = std::make_shared<basic_image>(height, width, width * 4, basic_image::image_format::rgba32);
 
-		for (uint32_t y = 0; y < height; ++y)
+		for(uint32_t y = 0; y < height; ++y)
 			input.read(img->rgba(0, height - y - 1).ptr, width * 4);
 		return img;
 	}
@@ -42,7 +42,7 @@ basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
 		uint32_t width = input.read<uint32_t>();
 		uint32_t height = input.read<uint32_t>();
 
-		if (size == width * height)
+		if(size == width * height)
 		{
 			auto img = std::make_shared<basic_image>(height, width, width, basic_image::image_format::p8);
 
@@ -52,7 +52,7 @@ basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
 			return img;
 		}
 
-		if (size == width * height * 3)
+		if(size == width * height * 3)
 		{
 			auto img = std::make_shared<basic_image>(height, width, width * 3, basic_image::image_format::rgb24);
 
@@ -68,19 +68,19 @@ basic_image_ptr vcmiextract::load_image_pcx(memory_file& input)
 
 struct image_entry_def
 {
-	uint32_t size;
-	uint32_t format;
-	uint32_t full_width;
-	uint32_t full_height;
-	uint32_t stored_width;
-	uint32_t stored_height;
-	uint32_t margin_left;
-	uint32_t margin_top;
+	uint32_t size = 0;
+	uint32_t format = 0;
+	uint32_t full_width = 0;
+	uint32_t full_height = 0;
+	uint32_t stored_width = 0;
+	uint32_t stored_height = 0;
+	uint32_t margin_left = 0;
+	uint32_t margin_top = 0;
 };
 
-static basic_image_ptr load_image_def(memory_file& file, image_entry_def const& entry, const std::array<uint8_t, 256 * 3>& palette)
+static basic_image_ptr load_image_def(memory_file & file, const image_entry_def & entry, const std::array<uint8_t, 256 * 3> & palette)
 {
-	auto image = std::make_shared< basic_image>(entry.full_height, entry.full_width, entry.full_width, basic_image::image_format::p8);
+	auto image = std::make_shared<basic_image>(entry.full_height, entry.full_width, entry.full_width, basic_image::image_format::p8);
 
 	std::copy(palette.begin(), palette.end(), image->palette.get());
 
@@ -89,108 +89,108 @@ static basic_image_ptr load_image_def(memory_file& file, image_entry_def const& 
 
 	size_t offset = file.tell();
 
-	switch (entry.format)
+	switch(entry.format)
 	{
-	case 0:
-	{
-		for (uint32_t y = 0; y < entry.stored_height; ++y)
+		case 0:
 		{
-			file.read(image->indexed(start_x, start_y + y).ptr, entry.stored_width);
-		}
-		break;
-	}
-	case 1:
-	{
-		std::vector<uint32_t> pixel_data_offset(entry.stored_height);
-
-		file.read(pixel_data_offset.data(), pixel_data_offset.size());
-
-		for (uint32_t y = 0; y < entry.stored_height; ++y)
-		{
-			file.set(offset + pixel_data_offset[y]);
-
-			for (uint32_t x = 0; x < entry.stored_width;)
+			for(uint32_t y = 0; y < entry.stored_height; ++y)
 			{
-				uint8_t segment_type = file.read<uint8_t>();
-				uint32_t segment_length = file.read<uint8_t>() + 1;
-
-				if (segment_type == 0xff)
-				{
-					file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
-				}
-				else
-				{
-					std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
-				}
-				x += segment_length;
+				file.read(image->indexed(start_x, start_y + y).ptr, entry.stored_width);
 			}
+			break;
 		}
-		break;
-	}
-	case 2:
-	{
-		uint16_t pixel_data_offset = file.read<uint16_t>();
-
-		file.set(offset + pixel_data_offset);
-
-		for (uint32_t y = 0; y < entry.stored_height; ++y)
+		case 1:
 		{
-			for (uint32_t x = 0; x < entry.stored_width;)
+			std::vector<uint32_t> pixel_data_offset(entry.stored_height);
+
+			file.read(pixel_data_offset.data(), pixel_data_offset.size());
+
+			for(uint32_t y = 0; y < entry.stored_height; ++y)
 			{
-				uint8_t segment_value = file.read<uint8_t>();
-				uint8_t segment_type = segment_value / 32;
-				uint8_t segment_length = (segment_value & 31) + 1;
+				file.set(offset + pixel_data_offset[y]);
 
-				if (segment_type == 7)
+				for(uint32_t x = 0; x < entry.stored_width;)
 				{
-					file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
+					uint8_t segment_type = file.read<uint8_t>();
+					uint32_t segment_length = file.read<uint8_t>() + 1;
+
+					if(segment_type == 0xff)
+					{
+						file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
+					}
+					else
+					{
+						std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
+					}
+					x += segment_length;
 				}
-				else
-				{
-					std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
-				}
-				x += segment_length;
 			}
+			break;
 		}
-		break;
-	}
-	case 3:
-	{
-		for (uint32_t y = 0; y < entry.stored_height; ++y)
+		case 2:
 		{
-			file.set(offset + y * 2 * (entry.stored_width / 32));
-
 			uint16_t pixel_data_offset = file.read<uint16_t>();
 
 			file.set(offset + pixel_data_offset);
 
-			for (uint32_t x = 0; x < entry.stored_width;)
+			for(uint32_t y = 0; y < entry.stored_height; ++y)
 			{
-				uint8_t segment_value = file.read<uint8_t>();
-				uint8_t segment_type = segment_value / 32;
-				uint8_t segment_length = (segment_value & 31) + 1;
+				for(uint32_t x = 0; x < entry.stored_width;)
+				{
+					uint8_t segment_value = file.read<uint8_t>();
+					uint8_t segment_type = segment_value / 32;
+					uint8_t segment_length = (segment_value & 31) + 1;
 
-				if (segment_type == 7)
-				{
-					file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
+					if(segment_type == 7)
+					{
+						file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
+					}
+					else
+					{
+						std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
+					}
+					x += segment_length;
 				}
-				else
-				{
-					std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
-				}
-				x += segment_length;
 			}
+			break;
 		}
-		break;
-	}
-	default:
-		assert(0);
+		case 3:
+		{
+			for(uint32_t y = 0; y < entry.stored_height; ++y)
+			{
+				file.set(offset + y * 2 * (entry.stored_width / 32));
+
+				uint16_t pixel_data_offset = file.read<uint16_t>();
+
+				file.set(offset + pixel_data_offset);
+
+				for(uint32_t x = 0; x < entry.stored_width;)
+				{
+					uint8_t segment_value = file.read<uint8_t>();
+					uint8_t segment_type = segment_value / 32;
+					uint8_t segment_length = (segment_value & 31) + 1;
+
+					if(segment_type == 7)
+					{
+						file.read(image->indexed(start_x + x, start_y + y).ptr, segment_length);
+					}
+					else
+					{
+						std::fill_n(image->indexed(start_x + x, start_y + y).ptr, segment_length, segment_type);
+					}
+					x += segment_length;
+				}
+			}
+			break;
+		}
+		default:
+			assert(0);
 	}
 
 	return image;
 }
 
-static void extract_def_h3(memory_file& file, const std::filesystem::path& destination)
+static void extract_def_h3(memory_file & file, const std::filesystem::path & destination)
 {
 	[[maybe_unused]] uint32_t type = file.read<uint32_t>();
 	[[maybe_unused]] uint32_t width = file.read<uint32_t>();
@@ -199,28 +199,28 @@ static void extract_def_h3(memory_file& file, const std::filesystem::path& desti
 
 	std::array<uint8_t, 256 * 3> palette;
 
-	for (auto& entry : palette)
+	for(auto & entry : palette)
 		file.read(entry);
 
 	struct archive_entry
 	{
-		std::array<char, 13> name;
-		uint32_t offset;
+		std::array<char, 13> name{};
+		uint32_t offset = 0;
 	};
 
 	struct archive_block_entry
 	{
 		std::vector<archive_entry> entries;
 
-		uint32_t index;
-		uint32_t size;
-		uint32_t unknown1;
-		uint32_t unknown2;
+		uint32_t index = 0;
+		uint32_t size = 0;
+		uint32_t unknown1 = 0;
+		uint32_t unknown2 = 0;
 	};
 
 	std::map<uint32_t, archive_block_entry> groups;
 
-	for (uint32_t i = 0; i < total_groups; ++i)
+	for(uint32_t i = 0; i < total_groups; ++i)
 	{
 		archive_block_entry group;
 
@@ -231,10 +231,10 @@ static void extract_def_h3(memory_file& file, const std::filesystem::path& desti
 
 		group.entries.resize(group.size);
 
-		for (uint32_t j = 0; j < group.size; ++j)
+		for(uint32_t j = 0; j < group.size; ++j)
 			file.read(group.entries[j].name.data(), group.entries[j].name.size());
 
-		for (uint32_t j = 0; j < group.size; ++j)
+		for(uint32_t j = 0; j < group.size; ++j)
 			file.read(group.entries[j].offset);
 
 		assert(groups.count(group.index) == 0);
@@ -243,9 +243,9 @@ static void extract_def_h3(memory_file& file, const std::filesystem::path& desti
 
 	std::string file_listing;
 
-	for (auto const& group : groups)
+	for(const auto & group : groups)
 	{
-		for (auto const& entry : group.second.entries)
+		for(const auto & entry : group.second.entries)
 		{
 			image_entry_def header;
 
@@ -262,7 +262,7 @@ static void extract_def_h3(memory_file& file, const std::filesystem::path& desti
 			file.read(header.margin_top);
 
 			// special case for some "old" format defs (SGTWMTA.DEF and SGTWMTB.DEF)
-			if (header.format == 1 && header.stored_width > header.full_width && header.stored_height > header.full_height)
+			if(header.format == 1 && header.stored_width > header.full_width && header.stored_height > header.full_height)
 			{
 				header.stored_height = header.full_height;
 				header.stored_width = header.full_width;
@@ -283,12 +283,12 @@ static void extract_def_h3(memory_file& file, const std::filesystem::path& desti
 			vcmiextract::save_image(image, destination, entry.name.data());
 		}
 	}
-	memory_file listing_file(reinterpret_cast<uint8_t*>(file_listing.data()), file_listing.size());
+	memory_file listing_file(reinterpret_cast<uint8_t *>(file_listing.data()), file_listing.size());
 
 	vcmiextract::save_file(listing_file, destination, "tiles.txt");
 }
 
-static void extract_def_d32f(memory_file& file, const std::filesystem::path& destination)
+static void extract_def_d32f(memory_file & file, const std::filesystem::path & destination)
 {
 	uint32_t magic = file.read<uint32_t>();
 	uint32_t unknown1 = file.read<uint32_t>();
@@ -320,17 +320,17 @@ static void extract_def_d32f(memory_file& file, const std::filesystem::path& des
 
 	group.resize(entries_count);
 
-	for (uint32_t j = 0; j < entries_count; ++j)
+	for(uint32_t j = 0; j < entries_count; ++j)
 		file.read(group[j].name.data(), group[j].name.size());
 
-	for (uint32_t j = 0; j < entries_count; ++j)
+	for(uint32_t j = 0; j < entries_count; ++j)
 		file.read(group[j].offset);
 
 	assert(magic == 0x46323344);
 
 	std::string file_listing;
 
-	for (auto const& entry : group)
+	for(const auto & entry : group)
 	{
 		file.set(entry.offset);
 
@@ -352,9 +352,9 @@ static void extract_def_d32f(memory_file& file, const std::filesystem::path& des
 		assert(bits_per_pixel == 32);
 		assert(image_size == stored_width * stored_height * 4);
 
-		auto image = std::make_shared< basic_image>(full_height, full_width, full_width * 4, basic_image::image_format::rgba32);
+		auto image = std::make_shared<basic_image>(full_height, full_width, full_width * 4, basic_image::image_format::rgba32);
 
-		for (uint32_t y = 0; y < stored_height; ++y)
+		for(uint32_t y = 0; y < stored_height; ++y)
 		{
 			file.read(image->rgba(margin_left, margin_top + stored_height - y - 1).ptr, stored_width * 4);
 		}
@@ -368,14 +368,14 @@ static void extract_def_d32f(memory_file& file, const std::filesystem::path& des
 		vcmiextract::save_image(image, destination, entry.name.data());
 	}
 
-	memory_file listing_file(reinterpret_cast<uint8_t*>(file_listing.data()), file_listing.size());
+	memory_file listing_file(reinterpret_cast<uint8_t *>(file_listing.data()), file_listing.size());
 
 	vcmiextract::save_file(listing_file, destination, "tiles.txt");
 }
 
-void vcmiextract::extract_def(memory_file& file, const std::filesystem::path& destination)
+void vcmiextract::extract_def(memory_file & file, const std::filesystem::path & destination)
 {
-	if (file.peek<uint32_t>() == 0x46323344) // D32F
+	if(file.peek<uint32_t>() == 0x46323344) // D32F
 		extract_def_d32f(file, destination);
 	else
 		extract_def_h3(file, destination);

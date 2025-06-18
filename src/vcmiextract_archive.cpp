@@ -3,11 +3,11 @@
 #include <array>
 #include <vector>
 
-void vcmiextract::extract_lod(memory_file& file, const std::filesystem::path& destination)
+void vcmiextract::extract_lod(memory_file & file, const std::filesystem::path & destination)
 {
 	struct archive_entry
 	{
-		std::array<char, 16> name;
+		std::array<char, 16> name{};
 
 		uint32_t offset = 0;
 		uint32_t full_size = 0;
@@ -23,7 +23,7 @@ void vcmiextract::extract_lod(memory_file& file, const std::filesystem::path& de
 
 	std::vector<archive_entry> entries;
 
-	for (uint32_t i = 0; i < total_files; ++i)
+	for(uint32_t i = 0; i < total_files; ++i)
 	{
 		archive_entry entry;
 
@@ -36,11 +36,11 @@ void vcmiextract::extract_lod(memory_file& file, const std::filesystem::path& de
 		entries.push_back(entry);
 	}
 
-	for (auto const& entry : entries)
+	for(const auto & entry : entries)
 	{
 		file.set(entry.offset);
 
-		if (entry.compressed_size != 0)
+		if(entry.compressed_size != 0)
 		{
 			memory_file compressed(file.ptr(), entry.compressed_size);
 			memory_file file_data(entry.full_size);
@@ -56,11 +56,11 @@ void vcmiextract::extract_lod(memory_file& file, const std::filesystem::path& de
 	}
 }
 
-void vcmiextract::extract_snd(memory_file& file, const std::filesystem::path& destination)
+void vcmiextract::extract_snd(memory_file & file, const std::filesystem::path & destination)
 {
 	struct archive_entry
 	{
-		std::array<char, 40> name;
+		std::array<char, 40> name{};
 
 		uint32_t offset = 0;
 		uint32_t full_size = 0;
@@ -70,7 +70,7 @@ void vcmiextract::extract_snd(memory_file& file, const std::filesystem::path& de
 
 	std::vector<archive_entry> entries;
 
-	for (uint32_t i = 0; i < total_files; ++i)
+	for(uint32_t i = 0; i < total_files; ++i)
 	{
 		archive_entry entry;
 
@@ -81,7 +81,7 @@ void vcmiextract::extract_snd(memory_file& file, const std::filesystem::path& de
 		entries.push_back(entry);
 	}
 
-	for (auto const& entry : entries)
+	for(const auto & entry : entries)
 	{
 		file.set(entry.offset);
 		memory_file file_data(file.ptr(), entry.full_size);
@@ -89,11 +89,11 @@ void vcmiextract::extract_snd(memory_file& file, const std::filesystem::path& de
 	}
 }
 
-void vcmiextract::extract_vid(memory_file& file, const std::filesystem::path& destination)
+void vcmiextract::extract_vid(memory_file & file, const std::filesystem::path & destination)
 {
 	struct archive_entry
 	{
-		std::array<char, 40> name;
+		std::array<char, 40> name{};
 
 		uint32_t begin = 0;
 		uint32_t end = 0;
@@ -103,22 +103,22 @@ void vcmiextract::extract_vid(memory_file& file, const std::filesystem::path& de
 
 	std::vector<archive_entry> entries;
 
-	for (uint32_t i = 0; i < total_files; ++i)
+	for(uint32_t i = 0; i < total_files; ++i)
 	{
 		archive_entry entry;
 
 		file.read(entry.name.data(), entry.name.size());
 		file.read(entry.begin);
 
-		if (!entries.empty())
+		if(!entries.empty())
 			entries.back().end = entry.begin;
 		entries.push_back(entry);
 	}
 
-	if (!entries.empty())
+	if(!entries.empty())
 		entries.back().end = file.size();
 
-	for (auto const& entry : entries)
+	for(const auto & entry : entries)
 	{
 		file.set(entry.begin);
 		memory_file file_data(file.ptr(), entry.end - entry.begin);

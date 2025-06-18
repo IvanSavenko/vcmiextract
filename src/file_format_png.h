@@ -62,8 +62,8 @@ struct basic_image
 		invalid,
 	};
 
-	std::unique_ptr< uint8_t[] > palette;
-	std::unique_ptr< uint8_t[] > pixels;
+	std::unique_ptr<uint8_t[]> palette;
+	std::unique_ptr<uint8_t[]> pixels;
 	uint32_t scanline;
 	uint32_t height;
 	uint32_t width;
@@ -74,7 +74,7 @@ struct basic_image
 	{
 		assert(format == image_format::p8);
 		assert(index < 256);
-		return { palette.get() + 3 * index };
+		return {palette.get() + 3 * index};
 	}
 
 	image_pixel_indexed indexed(uint32_t col, uint32_t row)
@@ -82,7 +82,7 @@ struct basic_image
 		assert(format == image_format::p8);
 		assert(row < height);
 		assert(col < width);
-		return { pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col) };
+		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
 	}
 
 	image_pixel_gray gray(uint32_t col, uint32_t row)
@@ -90,7 +90,7 @@ struct basic_image
 		assert(format == image_format::g8);
 		assert(row < height);
 		assert(col < width);
-		return { pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col) };
+		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
 	}
 
 	image_pixel_rgb rgb(uint32_t col, uint32_t row)
@@ -98,15 +98,15 @@ struct basic_image
 		assert(format == image_format::rgb24);
 		assert(row < height);
 		assert(col < width);
-		return { pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col) };
+		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
 	}
 
-	image_pixel_rgba rgba( uint32_t col, uint32_t row )
+	image_pixel_rgba rgba(uint32_t col, uint32_t row)
 	{
 		assert(format == image_format::rgba32);
 		assert(row < height);
 		assert(col < width);
-		return { pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col) };
+		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
 	}
 
 	basic_image(uint32_t height, uint32_t width, uint32_t scanline, image_format format);
