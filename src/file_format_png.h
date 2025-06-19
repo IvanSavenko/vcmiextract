@@ -80,36 +80,38 @@ struct basic_image
 	image_pixel_indexed indexed(uint32_t col, uint32_t row)
 	{
 		assert(format == image_format::p8);
-		assert(row < height);
-		assert(col < width);
-		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
+		return {get_pixel_ptr(col, row)};
 	}
 
 	image_pixel_gray gray(uint32_t col, uint32_t row)
 	{
 		assert(format == image_format::g8);
-		assert(row < height);
-		assert(col < width);
-		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
+		return {get_pixel_ptr(col, row)};
 	}
 
 	image_pixel_rgb rgb(uint32_t col, uint32_t row)
 	{
 		assert(format == image_format::rgb24);
-		assert(row < height);
-		assert(col < width);
-		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
+		return {get_pixel_ptr(col, row)};
 	}
 
 	image_pixel_rgba rgba(uint32_t col, uint32_t row)
 	{
 		assert(format == image_format::rgba32);
+		return {get_pixel_ptr(col, row)};
+	}
+
+	uint8_t * get_pixel_ptr(uint32_t col, uint32_t row)
+	{
 		assert(row < height);
 		assert(col < width);
-		return {pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col)};
+		return pixels.get() + scanline * size_t(row) + bytes_per_pixel * size_t(col);
 	}
 
 	basic_image(uint32_t height, uint32_t width, uint32_t scanline, image_format format);
+
+	basic_image section(uint32_t left, uint32_t top, uint32_t width, uint32_t height);
+	basic_image rotateCounterclockwise();
 };
 
 using basic_image_ptr = std::shared_ptr<basic_image>;

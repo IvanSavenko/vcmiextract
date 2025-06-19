@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <array>
+#include <algorithm>
 #if __has_include(<libpng16/png.h>)
 #include <libpng16/png.h>
 #else
@@ -43,6 +44,54 @@ basic_image::basic_image(uint32_t height, uint32_t width, uint32_t scanline, ima
 		palette.reset(new uint8_t[256 * 3]);
 
 	std::fill_n(pixels.get(), scanline * height, uint8_t(0));
+}
+
+basic_image basic_image::section(uint32_t left, uint32_t top, uint32_t section_width, uint32_t section_height)
+{
+	basic_image ret(section_height, section_width, section_width * bytes_per_pixel, format);
+
+	assert(left + section_width <= width);
+	assert(top + section_height <= height);
+
+	uint8_t * src_pixel = pixels.get() + top * scanline + left * bytes_per_pixel;
+	uint8_t * dst_pixel = ret.pixels.get();
+	uint32_t bytes_per_line_to_copy = section_width * bytes_per_pixel;
+
+	for (uint32_t i = 0; i < section_height; ++i)
+	{
+		std::copy_n(src_pixel, bytes_per_line_to_copy, dst_pixel);
+		src_pixel += scanline;
+		dst_pixel += ret.scanline;
+	}
+	return ret;
+}
+
+basic_image basic_image::rotateCounterclockwise()
+{
+	basic_image ret(width, height, height * bytes_per_pixel, format);
+
+	constexpr uint32_t block_size = 16;
+	uint32_t width_blocks = (width + block_size - 1) / block_size;
+	uint32_t height_blocks = (height + block_size - 1) / block_size;
+
+	for (uint32_t block_x = 0; block_x < width_blocks; ++block_x)
+	{
+		for (uint32_t block_y = 0; block_y < height_blocks; ++block_y)
+		{
+			uint32_t block_x_begin = block_x * block_size;
+			uint32_t block_x_end = std::min(width, block_x_begin + block_size);
+			uint32_t block_y_begin = block_y * block_size;
+			uint32_t block_y_end = std::min(height, block_y_begin + block_size);
+
+			for (uint32_t x = block_x_begin; x < block_x_end; ++x)
+			{
+				for (uint32_t y = block_y_begin; y < block_y_end; ++y)
+					std::copy_n(get_pixel_ptr(x, y), bytes_per_pixel, ret.get_pixel_ptr(y,x));
+			}
+		}
+	}
+
+	return ret;
 }
 
 static uint8_t get_png_color_type_from_format(basic_image::image_format format)

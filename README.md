@@ -17,7 +17,7 @@ Animations - will be extracted as set of png files and additional text file that
 - .def
 - .d32: used by HotA
 
-Spritesheets (HD Edition) - partial support, will be only converted to .png as spritesheet, without breaking down into individual images
+Spritesheets (HD Edition) - partial support, extraction done as it, without resizing to match H3 sheet size
 - .dds
 
 Images - will be converted to .png format
