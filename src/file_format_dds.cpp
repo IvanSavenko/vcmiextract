@@ -87,9 +87,9 @@ struct color_dxt
 	}
 
 	explicit color_dxt(uint16_t value)
-		: r(((value) & 31) << 3)
+		: r(((value >> 11) & 31) << 3)
 		, g(((value >> 5) & 63) << 2)
-		, b(((value >> 11)) << 3)
+		, b((value & 31) << 3)
 	{
 		assert(r < 256);
 		assert(g < 256);
