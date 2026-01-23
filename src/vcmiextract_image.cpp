@@ -39,7 +39,7 @@ basic_image_ptr vcmiextract::load_image_pcx(memory_file & input)
 		assert(size_data == width * height * bits_per_pixel / 8);
 		assert(bits_per_pixel == 32);
 		assert(unknown1 == 0);
-		assert(unknown8 == 8);
+        assert(unknown8 == 8 || unknown8 == 0);
 		assert(unknown9 == 0);
 
 		auto img = std::make_shared<basic_image>(height, width, width * 4, basic_image::image_format::rgba32);

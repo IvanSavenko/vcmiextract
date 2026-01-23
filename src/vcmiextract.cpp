@@ -122,6 +122,7 @@ static void process(std::string filename)
 
 int main(int argc, char ** argv)
 {
+    process("/home/ivan/HotA_1.8.0.lod");
 	for(int i = 1; i < argc; ++i)
 		process(argv[i]);
 

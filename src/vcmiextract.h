@@ -13,7 +13,8 @@ namespace vcmiextract
 	void extract_vid(memory_file& source, const std::filesystem::path& destination);
 	void extract_def(memory_file& source, const std::filesystem::path& destination);
 
-	void decompress_file(memory_file& source, memory_file& target);
+    void decompress_file_deflate(memory_file& source, memory_file& target);
+    void decompress_file_lzma(memory_file& source, memory_file& target);
 
 	void save_image(const basic_image_ptr & data, const std::filesystem::path& destination, const std::string & filename);
 	void save_file(memory_file& data, const std::filesystem::path& destination, const std::string & filename);

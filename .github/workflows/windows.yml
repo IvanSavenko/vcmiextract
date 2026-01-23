@@ -23,7 +23,7 @@ jobs:
 
     - name: VCPKG
       if: ${{ startsWith(matrix.platform, 'msvc') }}
-      run: vcpkg.exe install zlib libpng --triplet '${{matrix.triplet}}'
+      run: vcpkg.exe install zlib libpng liblzma --triplet '${{matrix.triplet}}'
 
     - name: Configure
       run: cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release --toolchain="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='${{matrix.triplet}}'

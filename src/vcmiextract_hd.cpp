@@ -144,7 +144,7 @@ void vcmiextract::extract_pak(memory_file & file, const std::filesystem::path & 
 		{
 			memory_file compressed(file.ptr(), sheet.compressed_size);
 			memory_file file_data(sheet.full_size);
-			vcmiextract::decompress_file(compressed, file_data);
+            vcmiextract::decompress_file_deflate(compressed, file_data);
 			sheets.push_back(file_format_dds::load(file_data));
 			file.skip(sheet.compressed_size);
 		}

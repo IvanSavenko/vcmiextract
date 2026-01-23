@@ -8,6 +8,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
+find_package(LZMA QUIET)
+
+if (NOT LZMA_FOUND)
+	find_library(LZMA_LIBRARY NAMES lzma liblzma)
+	find_path(LZMA_INCLUDE_DIR NAMES lzma.h)
+
+	if (LZMA_LIBRARY AND LZMA_INCLUDE_DIR)
+		set(LZMA_FOUND TRUE)
+		set(LZMA_LIBRARIES ${LZMA_LIBRARY})
+		set(LZMA_INCLUDE_DIRS ${LZMA_INCLUDE_DIR})
+	else()
+		set(LZMA_FOUND FALSE)
+	endif()
+endif()
 
 if (MSVC)
 	add_compile_options(/W4)
@@ -27,14 +41,17 @@ set(extract_SRCS
 	src/vcmiextract_image.cpp
 	src/vcmiextract_hd.cpp
 	src/vcmiextract_zlib.cpp
+	src/vcmiextract_lzma.cpp
 )
 
 add_executable(vcmiextract ${extract_SRCS})
 
 set_property(TARGET vcmiextract PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+target_include_directories(vcmiextract PRIVATE ${LZMA_INCLUDE_DIRS})
 target_link_libraries(vcmiextract 
 	PRIVATE
+	    ${LZMA_LIBRARIES}
 		ZLIB::ZLIB
 		PNG::PNG
 )

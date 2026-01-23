@@ -28,7 +28,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: APT
-        run: sudo apt install libpng-dev zlib1g-dev '${{matrix.compiler.apt}}'
+        run: sudo apt install libpng-dev zlib1g-dev liblzma-dev '${{matrix.compiler.apt}}'
       - name: Configure
         run: cmake -S . -B ./build -DCMAKE_BUILD_TYPE='${{matrix.type}}' -DCMAKE_CC_COMPILER='${{matrix.compiler.cc}}' -DCMAKE_CXX_COMPILER='${{matrix.compiler.cxx}}'
       - name: Build
