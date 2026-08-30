@@ -1,18 +1,34 @@
-name: Build Windows package
+name: Build Windows packages
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  windows:
+    name: Build (${{ matrix.platform }})
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: msvc-x64
-            os: windows-latest
+            arch: x64
+            toolset: '14.29'
             triplet: x64-windows-static
-    runs-on: ${{ matrix.os }}
+            artifact_platform: x64
+
+          - platform: msvc-x86
+            arch: amd64_x86
+            toolset: '14.29'
+            triplet: x86-windows-static
+            artifact_platform: x86
+
+    runs-on: windows-latest
     defaults:
       run:
         shell: bash
@@ -21,19 +37,39 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Install MSVC v142 toolset
+      shell: pwsh
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $installPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+        if (-not $installPath) {
+          throw "Visual Studio installation was not found"
+        }
+
+        $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+        & $installer modify --installPath "$installPath" --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --quiet --norestart
+        if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) {
+          throw "Installing MSVC v142 failed with exit code $LASTEXITCODE"
+        }
+
+    - name: Setup MSVC developer command prompt
+      uses: step-security/msvc-dev-cmd@main
+      with:
+        arch: ${{ matrix.arch }}
+        toolset: ${{ matrix.toolset }}
+
     - name: VCPKG
-      if: ${{ startsWith(matrix.platform, 'msvc') }}
       run: vcpkg.exe install zlib libpng liblzma --triplet '${{matrix.triplet}}'
 
     - name: Configure
-      run: cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release --toolchain="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='${{matrix.triplet}}'
+      run: cmake -S . -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release --toolchain="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='${{matrix.triplet}}'
 
     - name: Build
-      run: cmake --build ./build --config Release
+      run: cmake --build ./build
 
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: vcmiextract-windows-x64.zip
+        name: vcmiextract-windows-${{ matrix.artifact_platform }}.zip
         compression-level: 9
-        path: ./build/Release/vcmiextract.exe
+        path: ./build/vcmiextract.exe

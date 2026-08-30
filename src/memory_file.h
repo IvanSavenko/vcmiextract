@@ -5,7 +5,9 @@
 #include <cstdio>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 class memory_file
@@ -144,14 +146,22 @@ inline memory_file::memory_file(const std::string & filename)
 	auto fsize = ftell(file_ptr);
 #endif
 	assert(fsize > 0);
+	if(fsize <= 0 || static_cast<uint64_t>(fsize) > std::numeric_limits<size_t>::max())
+	{
+		fclose(file_ptr);
+		throw std::runtime_error("Input file is too large for this architecture");
+	}
 	fseek(file_ptr, 0, SEEK_SET);
 
-	m_data_storage.reset(new uint8_t[fsize]);
+	const size_t file_size = static_cast<size_t>(fsize);
+	m_data_storage.reset(new uint8_t[file_size]);
 	m_data_begin = m_data_storage.get();
 	m_data_ptr = m_data_storage.get();
-	m_data_end = m_data_storage.get() + fsize;
-	fread(m_data_storage.get(), sizeof(uint8_t), fsize, file_ptr);
+	m_data_end = m_data_storage.get() + file_size;
+	const size_t read_size = fread(m_data_storage.get(), sizeof(uint8_t), file_size, file_ptr);
 	fclose(file_ptr);
+	if(read_size != file_size)
+		throw std::runtime_error("Failed to read input file");
 }
 
 inline memory_file::memory_file(const std::filesystem::path & filename)
@@ -170,13 +180,20 @@ inline memory_file::memory_file(const std::filesystem::path & filename)
 	auto fsize = ftell(file_ptr);
 #endif
 	assert(fsize > 0);
+	if(fsize <= 0 || static_cast<uint64_t>(fsize) > std::numeric_limits<size_t>::max())
+	{
+		fclose(file_ptr);
+		throw std::runtime_error("Input file is too large for this architecture");
+	}
 	fseek(file_ptr, 0, SEEK_SET);
 
-	m_data_storage.reset(new uint8_t[fsize]);
+	const size_t file_size = static_cast<size_t>(fsize);
+	m_data_storage.reset(new uint8_t[file_size]);
 	m_data_begin = m_data_storage.get();
 	m_data_ptr = m_data_storage.get();
-	m_data_end = m_data_storage.get() + fsize;
-	int read_size = fread(m_data_storage.get(), sizeof(uint8_t), fsize, file_ptr);
-	assert(read_size == fsize);
+	m_data_end = m_data_storage.get() + file_size;
+	const size_t read_size = fread(m_data_storage.get(), sizeof(uint8_t), file_size, file_ptr);
 	fclose(file_ptr);
+	if(read_size != file_size)
+		throw std::runtime_error("Failed to read input file");
 }
